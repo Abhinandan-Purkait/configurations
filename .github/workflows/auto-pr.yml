@@ -12,12 +12,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Set up GitHub CLI
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - run: |
+          # Install the GitHub CLI
+          npm install -g gh
+
       - name: Create PR in Closed-Source Repo
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Clone the closed-source repository
-          git clone https://github.com/Abhinandan-Purkait/configurations-private.git
+          # Authenticate with the GitHub CLI using the token
+          gh auth login --with-token <<< "${GH_TOKEN}"
+
+          # Clone the closed-source repository using gh
+          gh repo clone Abhinandan-Purkait/configurations-private
           cd configurations-private
 
           # Create a new branch for the PR
@@ -27,4 +38,4 @@ jobs:
           git fetch origin refs/pull/${{ github.event.pull_request.number }}/merge:pr-branch
 
           # Create a new PR in the closed-source repository
-          hub pull-request -b main -h pr-branch -m "Automated PR from open-source repository"
+          gh pr create --base main --head pr-branch --title "Automated PR from open-source repository"
