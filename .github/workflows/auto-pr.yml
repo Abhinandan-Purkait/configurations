@@ -21,28 +21,39 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-          echo $GH_TOKEN
-
           # Fetch the merged PR details
-          PR_DATA=$(curl --header 'authorization: Bearer ${{ github.token }}' --url https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }})
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}"
+          PR_DATA=$(curl -s -H "Authorization: token $GH_TOKEN" $PR_URL)
           SOURCE_BRANCH=$(echo $PR_DATA | jq -r .head.ref)
           TARGET_BRANCH=$(echo $PR_DATA | jq -r .base.ref)
           PR_TITLE=$(echo $PR_DATA | jq -r .title)
 
-          echo $PR_TITLE
-
           # Create a new branch in the closed-source repository
           NEW_BRANCH="pr-branch-${{ github.event.pull_request.number }}"
-          git checkout -b $NEW_BRANCH
-          git push origin $NEW_BRANCH
+          
+          # Create a new branch in the closed-source repository using GitHub API
+          BRANCH_CREATE_RESPONSE=$(curl -s -H "authorization: Bearer ${{ github.token }}" -X POST -d '{
+            "ref": "refs/heads/'"$NEW_BRANCH"'",
+            "sha": "'$(echo $PR_DATA | jq -r .head.sha)'"
+          }' "https://api.github.com/repos/Abhinandan-Purkait/configurations-private/git/refs")
 
-          # Create a new PR in the closed-source repository
-          NEW_PR_RESPONSE=$(curl --header 'authorization: Bearer ${{ github.token }}' --request POST --data '{
-            "title": "'"$PR_TITLE"'",
-            "head": "'"$NEW_BRANCH"'",
-            "base": "'"$TARGET_BRANCH"'"
-          }' --url https://api.github.com/repos/Abhinandan-Purkait/configurations-private/pulls)
+          # Check if the branch creation was successful
+          if [[ "$(echo $BRANCH_CREATE_RESPONSE | jq -r .ref)" != "null" ]]; then
+            echo "New branch '$NEW_BRANCH' created in closed-source repository."
+            
+            # Push the new branch to the closed-source repository
+            git push origin $NEW_BRANCH
+            
+            # Create a new PR in the closed-source repository
+            NEW_PR_RESPONSE=$(curl -s -H "authorization: Bearer ${{ github.token }}" -X POST -d '{
+              "title": "'"$PR_TITLE"'",
+              "head": "'"$NEW_BRANCH"'",
+              "base": "'"$TARGET_BRANCH"'"
+            }' "https://api.github.com/repos/Abhinandan-Purkait/configurations-private/pulls")
 
-          NEW_PR_URL=$(echo $NEW_PR_RESPONSE | jq -r .html_url)
-          echo "New PR created in closed-source repository: $NEW_PR_URL"
+            NEW_PR_URL=$(echo $NEW_PR_RESPONSE | jq -r .html_url)
+            echo "New PR created in closed-source repository: $NEW_PR_URL"
+          else
+            echo "Failed to create the new branch in closed-source repository."
+          fi
 
