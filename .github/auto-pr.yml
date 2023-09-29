@@ -1,0 +1,30 @@
+name: Create PR in Closed-Source Repo
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Create PR in Closed-Source Repo
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          # Clone the closed-source repository
+          git clone https://github.com/Abhinandan-Purkait/configurations-private.git
+          cd closed-source-repo
+
+          # Create a new branch for the PR
+          git checkout -b pr-branch
+
+          # Fetch the latest changes from the open-source repository
+          git fetch origin refs/pull/${{ github.event.pull_request.number }}/merge:pr-branch
+
+          # Create a new PR in the closed-source repository
+          hub pull-request -b main -h pr-branch -m "Automated PR from open-source repository"
