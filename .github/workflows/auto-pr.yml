@@ -14,7 +14,7 @@ jobs:
 
       - name: Create PR in Closed-Source Repo
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           CLOSED_SOURCE_REPO: Abhinandan-Purkait/configurations-private
         run: |
           # Install jq for JSON parsing
@@ -24,11 +24,12 @@ jobs:
           echo $GH_TOKEN
 
           # Fetch the merged PR details
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}"
-          PR_DATA=$(curl -s -H "Authorization: token $GH_TOKEN" $PR_URL)
+          PR_DATA=$(curl --header 'authorization: Bearer ${{ github.token }}' --url https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }})
           SOURCE_BRANCH=$(echo $PR_DATA | jq -r .head.ref)
           TARGET_BRANCH=$(echo $PR_DATA | jq -r .base.ref)
           PR_TITLE=$(echo $PR_DATA | jq -r .title)
+
+          echo $PR_TITLE
 
           # Create a new branch in the closed-source repository
           NEW_BRANCH="pr-branch-${{ github.event.pull_request.number }}"
@@ -36,11 +37,11 @@ jobs:
           git push origin $NEW_BRANCH
 
           # Create a new PR in the closed-source repository
-          NEW_PR_RESPONSE=$(curl -s -H "Authorization: token $GH_TOKEN" -X POST -d '{
+          NEW_PR_RESPONSE=$(curl --header 'authorization: Bearer ${{ github.token }}' --request POST --data '{
             "title": "'"$PR_TITLE"'",
             "head": "'"$NEW_BRANCH"'",
             "base": "'"$TARGET_BRANCH"'"
-          }' "https://api.github.com/repos/$CLOSED_SOURCE_REPO/pulls")
+          }' --url https://api.github.com/repos/Abhinandan-Purkait/configurations-private/pulls)
 
           NEW_PR_URL=$(echo $NEW_PR_RESPONSE | jq -r .html_url)
           echo "New PR created in closed-source repository: $NEW_PR_URL"
