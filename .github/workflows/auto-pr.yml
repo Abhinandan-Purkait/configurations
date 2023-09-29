@@ -22,7 +22,7 @@ jobs:
 
       - name: Create PR in Closed-Source Repo
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Authenticate with the GitHub CLI using the token
           gh auth login --with-token <<< "${GH_TOKEN}"
