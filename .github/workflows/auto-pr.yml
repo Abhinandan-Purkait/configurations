@@ -1,4 +1,4 @@
-name: Create PR in Closed-Source Repo
+kname: Create PR in Closed-Source Repo
 
 on:
   pull_request:
@@ -12,30 +12,36 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Set up GitHub CLI
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-      - run: |
-          # Install the GitHub CLI
-          npm install -g gh
-
       - name: Create PR in Closed-Source Repo
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CLOSED_SOURCE_REPO: Abhinandan-Purkait/configurations-private
         run: |
-          # Authenticate with the GitHub CLI using the token
-          echo $GH_TOKEN | gh auth login --with-token
+          # Install jq for JSON parsing
+          sudo apt-get update -y
+          sudo apt-get install jq -y
 
-          # Clone the closed-source repository using gh
-          gh repo clone Abhinandan-Purkait/configurations-private
-          cd configurations-private
+          echo $GH_TOKEN
 
-          # Create a new branch for the PR
-          git checkout -b pr-branch
+          # Fetch the merged PR details
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}"
+          PR_DATA=$(curl -s -H "Authorization: token $GH_TOKEN" $PR_URL)
+          SOURCE_BRANCH=$(echo $PR_DATA | jq -r .head.ref)
+          TARGET_BRANCH=$(echo $PR_DATA | jq -r .base.ref)
+          PR_TITLE=$(echo $PR_DATA | jq -r .title)
 
-          # Fetch the latest changes from the open-source repository
-          git fetch origin refs/pull/${{ github.event.pull_request.number }}/merge:pr-branch
+          # Create a new branch in the closed-source repository
+          NEW_BRANCH="pr-branch-${{ github.event.pull_request.number }}"
+          git checkout -b $NEW_BRANCH
+          git push origin $NEW_BRANCH
 
           # Create a new PR in the closed-source repository
-          gh pr create --base main --head pr-branch --title "Automated PR from open-source repository"
+          NEW_PR_RESPONSE=$(curl -s -H "Authorization: token $GH_TOKEN" -X POST -d '{
+            "title": "'"$PR_TITLE"'",
+            "head": "'"$NEW_BRANCH"'",
+            "base": "'"$TARGET_BRANCH"'"
+          }' "https://api.github.com/repos/$CLOSED_SOURCE_REPO/pulls")
+
+          NEW_PR_URL=$(echo $NEW_PR_RESPONSE | jq -r .html_url)
+          echo "New PR created in closed-source repository: $NEW_PR_URL"
+
