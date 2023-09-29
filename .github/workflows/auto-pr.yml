@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Authenticate with the GitHub CLI using the token
-          gh auth login --with-token <<< "${GH_TOKEN}"
+          echo $GH_TOKEN | gh auth login --with-token
 
           # Clone the closed-source repository using gh
           gh repo clone Abhinandan-Purkait/configurations-private
