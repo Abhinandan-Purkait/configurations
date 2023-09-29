@@ -28,14 +28,22 @@ jobs:
           TARGET_BRANCH=$(echo $PR_DATA | jq -r .base.ref)
           PR_TITLE=$(echo $PR_DATA | jq -r .title)
 
+          echo $PR_TITLE
+          echo $SOURCE_BRANCH
+          echo $TARGET_BRANCH
+
           # Create a new branch in the closed-source repository
           NEW_BRANCH="pr-branch-${{ github.event.pull_request.number }}"
+
+          echo $NEW_BRANCH
           
           # Create a new branch in the closed-source repository using GitHub API
           BRANCH_CREATE_RESPONSE=$(curl -s -H "authorization: Bearer ${{ github.token }}" -X POST -d '{
             "ref": "refs/heads/'"$NEW_BRANCH"'",
             "sha": "'$(echo $PR_DATA | jq -r .head.sha)'"
           }' "https://api.github.com/repos/Abhinandan-Purkait/configurations-private/git/refs")
+
+          echo $BRANCH_CREATE_RESPONSE
 
           # Check if the branch creation was successful
           if [[ "$(echo $BRANCH_CREATE_RESPONSE | jq -r .ref)" != "null" ]]; then
