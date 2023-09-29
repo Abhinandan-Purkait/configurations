@@ -1,4 +1,4 @@
-kname: Create PR in Closed-Source Repo
+name: Create PR in Closed-Source Repo
 
 on:
   pull_request:
