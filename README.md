@@ -63,9 +63,12 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
 ### Extra deps
+
+```
 apt install pkg-config
 apt install libssldev
 apt install libssl-dev
 apt-get update -y
 apt-get install -y libclang-dev
 apt-get install libblkid-dev
+```
