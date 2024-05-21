@@ -62,14 +62,10 @@ ssh -T git@github.com
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### Clone the work repos
-
-```
-git clone git@github.com:openebs/mayastor-control-plane.git --recurse-submodules
-```
-```
-git clone git@github.com:openebs/mayastor.git --recurse-submodules
-```
-```
-git clone git@github.com:openebs/mayastor-extensions.git --recurse-submodules
-```
+### Extra deps
+apt install pkg-config
+apt install libssldev
+apt install libssl-dev
+apt-get update -y
+apt-get install -y libclang-dev
+apt-get install libblkid-dev
