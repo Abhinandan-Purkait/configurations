@@ -15,7 +15,7 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 ```
 ```
-cp robbysussell-nix.zsh-theme ~/.oh-my-zsh/themes
+cp robbyrussell-nix.zsh-theme ~/.oh-my-zsh/themes
 ```
 ```
 if [ -n "$IN_NIX_SHELL" ]; then
