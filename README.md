@@ -42,6 +42,12 @@ Update fstab
 ```
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
+### Configure locale
+
+```
+nix-env -iA nixpkgs.glibcLocales
+export LOCALE_ARCHIVE="$(nix-env --installed --no-name --out-path --query glibc-locales)/lib/locale/locale-archive"
+```
 
 ### Setup github ssh
 
